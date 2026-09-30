@@ -1,0 +1,32 @@
+{
+    "jsonversion": 1,
+    "identity": "c5395e85-4f0d-488d-8293-3369d577e180",
+    "qid": "9880e3fb-5b26-482c-8d8e-bf16652b513e",
+    "nick": "Fred",
+    "lastnick": "Fred",
+    "username": "Fred",
+    "realname": "Fred",
+    "away": "",
+    "usermodes": "",
+    "registered": true,
+    "signon": 1790796670,
+    "lastactive": 1790796812,
+    "channels": [
+        {
+            "key": "adea3559-1c47-4c5b-a3d1-56fb33f85f56",
+            "alias": "#Public",
+            "invitedby": "",
+            "datetime": "2026-09-30 19:38:06",
+            "isactive": true,
+            "level": "op"
+        },
+        {
+            "key": "dc66a80c-e99e-4321-8c44-ee33328cad10",
+            "alias": "#Freds",
+            "invitedby": "",
+            "datetime": "2026-09-30 19:52:22",
+            "isactive": true,
+            "level": "op"
+        }
+    ]
+}

@@ -1,0 +1,40 @@
+{
+    "jsonversion": 1,
+    "identity": "50fc18a0-3689-4378-8c52-b71f5366c0a5",
+    "qid": "a758d665-2bd4-45e0-a315-44ea7625f0b5",
+    "nick": "Betty",
+    "lastnick": "Betty",
+    "username": "Wilma",
+    "realname": "Wilma",
+    "away": "",
+    "usermodes": "",
+    "registered": true,
+    "signon": 1790797169,
+    "lastactive": 1790797707,
+    "channels": [
+        {
+            "key": "adea3559-1c47-4c5b-a3d1-56fb33f85f56",
+            "alias": "#Public",
+            "invitedby": "",
+            "datetime": "2026-09-30 19:39:34",
+            "isactive": true,
+            "level": "member"
+        },
+        {
+            "key": "ea6fa4aa-ecc0-406a-b9e7-a24a90a97e2c",
+            "alias": "#Bettys",
+            "invitedby": "",
+            "datetime": "2026-09-30 19:54:21",
+            "isactive": true,
+            "level": "op"
+        },
+        {
+            "key": "f759c024-ec89-4fd1-9d51-2e2856c9695d",
+            "alias": "#ABC",
+            "invitedby": "",
+            "datetime": "2026-09-30 19:57:04",
+            "isactive": true,
+            "level": "member"
+        }
+    ]
+}

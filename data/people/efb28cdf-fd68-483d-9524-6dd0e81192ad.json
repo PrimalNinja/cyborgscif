@@ -1,0 +1,48 @@
+{
+    "jsonversion": 1,
+    "identity": "efb28cdf-fd68-483d-9524-6dd0e81192ad",
+    "qid": "b1f4d2ff-cbdd-42c4-9b52-9c310f53c651",
+    "nick": "Barney",
+    "lastnick": "Barney",
+    "username": "Barney",
+    "realname": "Barney",
+    "away": "",
+    "usermodes": "",
+    "registered": true,
+    "signon": 1790796683,
+    "lastactive": 1790798593,
+    "channels": [
+        {
+            "key": "adea3559-1c47-4c5b-a3d1-56fb33f85f56",
+            "alias": "#Public",
+            "invitedby": "",
+            "datetime": "2026-09-30 19:38:48",
+            "isactive": true,
+            "level": "member"
+        },
+        {
+            "key": "ea6fa4aa-ecc0-406a-b9e7-a24a90a97e2c",
+            "alias": "#Bettys",
+            "invitedby": "",
+            "datetime": "2026-09-30 19:54:38",
+            "isactive": true,
+            "level": "member"
+        },
+        {
+            "key": "f759c024-ec89-4fd1-9d51-2e2856c9695d",
+            "alias": "#ABC",
+            "invitedby": "",
+            "datetime": "2026-09-30 19:56:46",
+            "isactive": true,
+            "level": "op"
+        },
+        {
+            "key": "dc66a80c-e99e-4321-8c44-ee33328cad10",
+            "alias": "#Freds",
+            "datetime": "2026-09-30 19:58:52",
+            "isactive": true,
+            "level": "member",
+            "invitedby": "Fred"
+        }
+    ]
+}

@@ -1,0 +1,1565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CyborgSCIF demo</title>
+<style>
+:root
+{
+    --paper: #E6ECF1;
+    --panel: #F7F9FB;
+    --ink: #1D2733;
+    --muted: #667485;
+    --line: #CBD5DF;
+    --accent: #2F4FA8;
+    --error: #B3261E;
+    --event: #5B6B7C;
+    --notice: #6A4A9C;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body
+{
+    background: var(--paper);
+    color: var(--ink);
+    font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, sans-serif;
+    display: flex;
+    flex-direction: column;
+}
+input, button { font: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.gsHeader
+{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding: 10px 16px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--line);
+}
+.gsBrand { font-weight: 700; font-size: 18px; letter-spacing: -0.01em; }
+.gsStatus { color: var(--muted); font-size: 14px; margin-right: auto; }
+.gsField
+{
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 6px 10px;
+    background: #FFFFFF;
+    color: var(--ink);
+    min-width: 0;
+}
+.gsButton
+{
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #FFFFFF;
+    border-radius: 6px;
+    padding: 6px 14px;
+    cursor: pointer;
+}
+.gsButton:hover { filter: brightness(1.12); }
+
+.gsMain
+{
+    flex: 1;
+    display: grid;
+    grid-template-columns: 190px 1fr 170px;
+    min-height: 0;
+}
+.gsWindows
+{
+    background: var(--panel);
+    border-right: 1px solid var(--line);
+    overflow-y: auto;
+    padding: 8px 0;
+}
+.gsTab
+{
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 8px 5px 14px;
+    cursor: pointer;
+}
+.gsTab:hover { background: #EDF1F5; }
+.gsTabCurrent { background: #DCE4EE; font-weight: 600; }
+.gsTabUnread .gsTabName { color: var(--accent); font-weight: 700; }
+.gsTabName { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gsTabClose
+{
+    border: 0;
+    background: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 17px;
+    line-height: 1;
+    padding: 0 4px;
+}
+.gsTabClose:hover { color: var(--error); }
+
+.gsCentre { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+.gsTopic
+{
+    padding: 8px 14px;
+    min-height: 38px;
+    border-bottom: 1px solid var(--line);
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.gsLogs { flex: 1; position: relative; min-height: 0; background: #FFFFFF; }
+.gsLog
+{
+    position: absolute;
+    top: 0; right: 0; bottom: 0; left: 0;
+    overflow-y: auto;
+    padding: 8px 14px;
+    font-family: ui-monospace, "Cascadia Mono", Consolas, "DejaVu Sans Mono", monospace;
+    font-size: 13.5px;
+    display: none;
+}
+.gsLogCurrent { display: block; }
+.gsLine { display: flex; gap: 10px; padding: 1px 0; }
+.gsTime { color: var(--muted); flex: 0 0 auto; }
+.gsNick
+{
+    flex: 0 0 110px;
+    text-align: right;
+    font-weight: 700;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.gsText { flex: 1; min-width: 0; white-space: pre-wrap; word-break: break-word; }
+.gsEvent .gsNick, .gsEvent .gsText { color: var(--event); font-weight: 400; }
+.gsAction .gsText { font-style: italic; }
+.gsNotice .gsNick, .gsNotice .gsText { color: var(--notice); }
+.gsInfo .gsNick, .gsInfo .gsText { color: var(--accent); font-weight: 400; }
+.gsError .gsNick, .gsError .gsText { color: var(--error); font-weight: 400; }
+.gsOlder
+{
+    display: none;
+    margin: 2px 0 10px;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--accent);
+    border-radius: 6px;
+    padding: 4px 12px;
+    cursor: pointer;
+    font: 13px system-ui, sans-serif;
+}
+
+.gsNames
+{
+    background: var(--panel);
+    border-left: 1px solid var(--line);
+    overflow-y: auto;
+    padding: 10px 12px;
+    font-size: 14px;
+}
+.gsNamesCount { color: var(--muted); font-size: 13px; margin-bottom: 6px; }
+.gsName { padding: 1px 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.gsInputBar
+{
+    display: flex;
+    gap: 8px;
+    padding: 10px 14px;
+    background: var(--panel);
+    border-top: 1px solid var(--line);
+}
+.gsInputBar .gsField { flex: 1; }
+
+@media (max-width: 760px)
+{
+    .gsMain { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+    .gsWindows { display: flex; overflow-x: auto; padding: 0; border-right: 0; border-bottom: 1px solid var(--line); }
+    .gsTab { white-space: nowrap; }
+    .gsNames { display: none; }
+    .gsNick { flex-basis: 72px; }
+}
+</style>
+</head>
+<body>
+
+<header class="gsHeader">
+    <div class="gsBrand">CyborgNet</div>
+    <span class="gsStatus" id="geStatus">Connecting…</span>
+    <input class="gsField" id="geNick" placeholder="Nickname" maxlength="30" autocomplete="off" aria-label="Nickname">
+    <button class="gsButton" id="geConnect" type="button">Connect</button>
+</header>
+
+<div class="gsMain">
+    <nav class="gsWindows" id="geWindows" aria-label="Windows"></nav>
+    <section class="gsCentre">
+        <div class="gsTopic" id="geTopic"></div>
+        <div class="gsLogs" id="geLogs"></div>
+        <div class="gsInputBar">
+            <input class="gsField" id="geInput" placeholder="Type a message, or /help for commands" autocomplete="off" aria-label="Message">
+            <button class="gsButton" id="geSend" type="button">Send</button>
+        </div>
+    </section>
+    <aside class="gsNames" id="geNames" aria-label="People in channel"></aside>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+// ---------------------------------------------------------------------------
+// CyborgSCIF demo client. ES5 + jQuery. Put next to api.php.
+// ---------------------------------------------------------------------------
+
+var m_strApiUrl = 'api.php';
+var m_strCookieName = 'cyborgscif_guid';
+var m_strStatusKey = '*status';     // nicks and channels can't start with *
+var m_intFetchMax = 500;
+var m_intHistoryCount = 50;
+
+var m_strGuid = '';
+var m_strNick = '';
+var m_strWantNick = '';
+var m_intPollMs = 2000;
+var m_blnLoggedIn = false;
+var m_blnLoggingIn = false;
+var m_blnRegistered = false;
+var m_objPollTimer = null;
+var m_blnFetching = false;
+var m_objWindows = {};
+var m_strCurrent = m_strStatusKey;
+var m_objNamesTimers = {};
+
+// ===========================================================================
+// API
+// ===========================================================================
+
+function apiCall(strCommand_a, objParams_a, fnDone_a)
+{
+    var arrParams = [{ name: 'guid', value: m_strGuid }];
+    var strName;
+    for (strName in objParams_a)
+    {
+        if (objParams_a.hasOwnProperty(strName) && objParams_a[strName] !== undefined)
+        {
+            arrParams.push({ name: strName, value: objParams_a[strName] });
+        }
+    }
+    $.ajax({
+        url: m_strApiUrl,
+        type: 'POST',
+        contentType: 'application/json',
+        dataType: 'json',
+        data: JSON.stringify({ command: strCommand_a, parameters: arrParams })
+    }).done(function (arrResults)
+    {
+        handleResults(arrResults);
+        if (fnDone_a)
+        {
+            fnDone_a(arrResults);
+        }
+    }).fail(function ()
+    {
+        addLine(m_strStatusKey, makeLine(0, '!', 'Could not reach the server (' + strCommand_a + ')', 'gsError'));
+        if (fnDone_a)
+        {
+            fnDone_a(null);
+        }
+    });
+}
+
+function handleResults(arrResults_a)
+{
+    var intI;
+    var intJ;
+    for (intI = 0; intI < arrResults_a.length; intI++)
+    {
+        var objResult = arrResults_a[intI];
+        if (objResult.message === 'Not logged in')
+        {
+            startLogin('Signed out by the server. Signing back in…');
+        }
+        else
+        {
+            if (objResult.message !== '')
+            {
+                addLine(m_strCurrent, makeLine(0, '!', objResult.message, objResult.result === 0 ? 'gsInfo' : 'gsError'));
+            }
+            // error rows repeat the message, so only success rows are processed
+            if (objResult.result === 0)
+            {
+                var arrHistory = [];
+                for (intJ = 0; intJ < objResult.data.length; intJ++)
+                {
+                    var arrRow = objResult.data[intJ];
+                    if (arrRow[0] === 'HISTORY')
+                    {
+                        arrHistory.push(arrRow);
+                    }
+                    else if (arrRow[0] === 'HISTORYEND')
+                    {
+                        handleHistory(arrHistory, arrRow);
+                        arrHistory = [];
+                    }
+                    else
+                    {
+                        handleRow(arrRow);
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ===========================================================================
+// Login / registration / polling
+// ===========================================================================
+
+function startLogin(strNote_a)
+{
+    if (!m_blnLoggingIn)
+    {
+        m_blnLoggingIn = true;
+        m_blnLoggedIn = false;
+        m_blnRegistered = false;
+        clearTimeout(m_objPollTimer);
+        markAllLeft(false);
+        if (strNote_a !== '')
+        {
+            addLine(m_strStatusKey, makeLine(0, '!', strNote_a, 'gsError'));
+        }
+        updateHeader();
+        apiCall('LOGIN', {}, function (arrResults)
+        {
+            if (arrResults === null)
+            {
+                m_blnLoggingIn = false;
+                setTimeout(function ()
+                {
+                    startLogin('');
+                }, 5000);
+            }
+        });
+    }
+}
+
+function handleLogin(arrRow_a)
+{
+    m_strGuid = arrRow_a[1];
+    setCookie(m_strCookieName, m_strGuid);
+    m_intPollMs = Math.max(1, parseInt(arrRow_a[2], 10) || 2) * 1000;
+    m_blnLoggedIn = true;
+    m_blnLoggingIn = false;
+    if (arrRow_a[4] === '1')
+    {
+        m_blnRegistered = true;
+        m_strNick = arrRow_a[3];
+        m_strWantNick = m_strNick;
+    }
+    else if (m_strWantNick !== '')
+    {
+        register(m_strWantNick);
+    }
+    updateHeader();
+    schedulePoll(m_intPollMs);
+}
+
+function register(strNick_a)
+{
+    var strUser = strNick_a.replace(/[^A-Za-z0-9_.\-]/g, '');
+    if (strUser === '')
+    {
+        strUser = 'user';
+    }
+    m_strWantNick = strNick_a;
+    apiCall('NICK', { nick: strNick_a }, function ()
+    {
+        apiCall('USER', { username: strUser, realname: strNick_a });
+    });
+}
+
+function schedulePoll(intDelay_a)
+{
+    clearTimeout(m_objPollTimer);
+    m_objPollTimer = setTimeout(doPoll, intDelay_a);
+}
+
+// PING only reports what is waiting; handlePing() fetches it
+function doPoll()
+{
+    if (m_blnLoggedIn)
+    {
+        apiCall('PING', {}, function ()
+        {
+            if (m_blnLoggedIn)
+            {
+                schedulePoll(m_intPollMs);
+            }
+        });
+    }
+}
+
+// row: ["PING", "messages printjobs ..."]
+function handlePing(arrRow_a)
+{
+    var arrWaiting = arrRow_a[1].split(' ');
+    var intI;
+    for (intI = 0; intI < arrWaiting.length; intI++)
+    {
+        if (arrWaiting[intI] === 'messages')
+        {
+            doFetch();
+        }
+        // other subsystems (printjobs etc.) would be handled here
+    }
+}
+
+function doFetch()
+{
+    if (!m_blnFetching && m_blnLoggedIn)
+    {
+        m_blnFetching = true;
+        apiCall('FETCH', {}, function (arrResults)
+        {
+            m_blnFetching = false;
+            // a full batch means more is waiting, so fetch again straight away
+            if (arrResults !== null && arrResults.length > 0 && arrResults[0].data.length >= m_intFetchMax)
+            {
+                doFetch();
+            }
+        });
+    }
+}
+
+// rejoin channels the user still wants after (re)registering
+function rejoinWanted()
+{
+    var strKey;
+    for (strKey in m_objWindows)
+    {
+        if (m_objWindows.hasOwnProperty(strKey))
+        {
+            var objWindow = m_objWindows[strKey];
+            if (objWindow.strType === 'channel' && objWindow.blnWanted && !objWindow.blnJoined)
+            {
+                apiCall('JOIN', { channel: objWindow.strName });
+            }
+        }
+    }
+}
+
+function markAllLeft(blnUnwant_a)
+{
+    var strKey;
+    for (strKey in m_objWindows)
+    {
+        if (m_objWindows.hasOwnProperty(strKey))
+        {
+            var objWindow = m_objWindows[strKey];
+            if (objWindow.strType === 'channel')
+            {
+                objWindow.blnJoined = false;
+                objWindow.objNames = {};
+                if (blnUnwant_a)
+                {
+                    objWindow.blnWanted = false;
+                }
+            }
+        }
+    }
+    renderNames();
+}
+
+// ===========================================================================
+// Rows
+// ===========================================================================
+
+function handleRow(arrRow_a)
+{
+    var strType = arrRow_a[0];
+    var intI;
+    if (strType === 'LOGIN')
+    {
+        handleLogin(arrRow_a);
+    }
+    else if (strType === 'PING')
+    {
+        handlePing(arrRow_a);
+    }
+    else if (strType === 'CHANNELS')
+    {
+        for (intI = 1; intI < arrRow_a.length; intI++)
+        {
+            var objWindow = ensureWindow(arrRow_a[intI]);
+            objWindow.blnJoined = true;
+            objWindow.blnWanted = true;
+            loadHistory(objWindow.strName, '');
+            refreshNames(objWindow.strName);
+        }
+    }
+    else if (strType === 'UNINVITE')
+    {
+        addLine(arrRow_a[2], makeLine(0, '←', arrRow_a[3] + ' was removed from the invite list', 'gsEvent'));
+    }
+    else if (strType === 'ACCESS')
+    {
+        var strText = arrRow_a[2] + ': ' + arrRow_a[3];
+        if (arrRow_a[4] !== '')
+        {
+            strText += ', invited by ' + arrRow_a[4];
+        }
+        addLine(arrRow_a[1], makeLine(0, '-', strText, 'gsInfo'));
+    }
+    else if (/^[0-9]{3}$/.test(strType))
+    {
+        handleNumeric(arrRow_a);
+    }
+    else
+    {
+        handleEvent(arrRow_a);
+    }
+}
+
+function handleNumeric(arrRow_a)
+{
+    var strNum = arrRow_a[0];
+    var objWindow = null;
+    if (strNum === '001')
+    {
+        m_blnRegistered = true;
+        m_strNick = arrRow_a[1];
+        m_strWantNick = m_strNick;
+        updateHeader();
+        addLine(m_strStatusKey, makeLine(0, '-', arrRow_a[2], 'gsInfo'));
+        rejoinWanted();
+    }
+    else if (strNum === '353')
+    {
+        objWindow = m_objWindows[arrRow_a[3].toLowerCase()];
+        if (objWindow)
+        {
+            objWindow.arrPendingNames = (objWindow.arrPendingNames || []).concat(arrRow_a[4].split(' '));
+        }
+        else
+        {
+            addLine(m_strCurrent, makeLine(0, '-', 'In ' + arrRow_a[3] + ': ' + arrRow_a[4], 'gsEvent'));
+        }
+    }
+    else if (strNum === '366')
+    {
+        objWindow = m_objWindows[arrRow_a[2].toLowerCase()];
+        if (objWindow && objWindow.arrPendingNames)
+        {
+            objWindow.objNames = parseNames(objWindow.arrPendingNames);
+            objWindow.arrPendingNames = null;
+            renderNames();
+        }
+    }
+    else if (strNum === '331' || strNum === '332')
+    {
+        objWindow = ensureWindow(arrRow_a[2]);
+        objWindow.strTopic = (strNum === '332') ? arrRow_a[3] : '';
+        updateTopicBar();
+        addLine(arrRow_a[2], makeLine(0, '-', (strNum === '332') ? 'Topic: ' + arrRow_a[3] : 'No topic is set', 'gsEvent'));
+    }
+    else if (strNum === '333')
+    {
+        addLine(arrRow_a[2], makeLine(0, '-', 'Topic set by ' + prefixNick(arrRow_a[3]) + ' on ' + unixToText(arrRow_a[4]), 'gsEvent'));
+    }
+    else if (strNum === '324')
+    {
+        addLine(arrRow_a[2], makeLine(0, '-', 'Modes: ' + arrRow_a.slice(3).join(' '), 'gsEvent'));
+    }
+    else if (strNum === '329')
+    {
+        addLine(arrRow_a[2], makeLine(0, '-', 'Created ' + unixToText(arrRow_a[3]), 'gsEvent'));
+    }
+    else if (strNum === '322')
+    {
+        addLine(m_strStatusKey, makeLine(0, '-', arrRow_a[2] + ' (' + arrRow_a[3] + ') ' + arrRow_a[4], ''));
+    }
+    else if (strNum === '323')
+    {
+        addLine(m_strStatusKey, makeLine(0, '-', 'End of channel list', 'gsEvent'));
+        showWindow(m_strStatusKey);
+    }
+    else if (strNum === '311')
+    {
+        addLine(m_strCurrent, makeLine(0, '-', arrRow_a[2] + ' is ' + arrRow_a[3] + '@' + arrRow_a[4] + ' (' + arrRow_a[6] + ')', 'gsInfo'));
+    }
+    else if (strNum === '319')
+    {
+        addLine(m_strCurrent, makeLine(0, '-', arrRow_a[2] + ' is in ' + arrRow_a[3], 'gsInfo'));
+    }
+    else if (strNum === '312')
+    {
+        addLine(m_strCurrent, makeLine(0, '-', arrRow_a[2] + ' is on ' + arrRow_a[3] + ' (' + arrRow_a[4] + ')', 'gsInfo'));
+    }
+    else if (strNum === '301')
+    {
+        addLine(m_strCurrent, makeLine(0, '-', arrRow_a[2] + ' is away: ' + arrRow_a[3], 'gsInfo'));
+    }
+    else if (strNum === '317')
+    {
+        addLine(m_strCurrent, makeLine(0, '-', arrRow_a[2] + ' idle ' + secondsToText(parseInt(arrRow_a[3], 10)) + ', signed on ' + unixToText(arrRow_a[4]), 'gsInfo'));
+    }
+    else if (strNum === '318')
+    {
+        // end of WHOIS, nothing to show
+    }
+    else if (strNum === '341')
+    {
+        addLine(m_strCurrent, makeLine(0, '-', 'Invited ' + arrRow_a[2] + ' to ' + arrRow_a[3], 'gsInfo'));
+    }
+    else if (strNum === '305' || strNum === '306')
+    {
+        addLine(m_strCurrent, makeLine(0, '-', arrRow_a[2], 'gsInfo'));
+    }
+    else if (strNum === '221')
+    {
+        addLine(m_strStatusKey, makeLine(0, '-', 'Your modes: ' + arrRow_a[2], 'gsInfo'));
+    }
+    else
+    {
+        addLine(m_strStatusKey, makeLine(0, '-', arrRow_a.slice(2).join(' '), ''));
+    }
+}
+
+// live events (from FETCH or replies to our own commands)
+function handleEvent(arrRow_a)
+{
+    var strType = arrRow_a[0];
+    var strNick = prefixNick(arrRow_a[1]);
+    var blnMe = sameNick(strNick, m_strNick);
+    var objEvent = formatEvent(arrRow_a, 0);
+    var objWindow = null;
+    var strKey;
+    if (strType === 'JOIN')
+    {
+        objWindow = ensureWindow(arrRow_a[2]);
+        if (blnMe)
+        {
+            // history includes this JOIN, so start the window from history
+            objWindow.blnJoined = true;
+            objWindow.blnWanted = true;
+            objWindow.blnHistoryLoaded = false;
+            objWindow.$hist.empty();
+            objWindow.$live.empty();
+            loadHistory(objWindow.strName, '');
+            showWindow(objWindow.strKey);
+        }
+        else
+        {
+            addLine(arrRow_a[2], objEvent.$line);
+            setName(objWindow, strNick, strNick, '');
+        }
+    }
+    else if (strType === 'PART')
+    {
+        objWindow = ensureWindow(arrRow_a[2]);
+        addLine(arrRow_a[2], objEvent.$line);
+        if (blnMe)
+        {
+            objWindow.blnJoined = false;
+            objWindow.objNames = {};
+            renderNames();
+        }
+        else
+        {
+            setName(objWindow, strNick, '', '');
+        }
+    }
+    else if (strType === 'KICK')
+    {
+        objWindow = ensureWindow(arrRow_a[2]);
+        addLine(arrRow_a[2], objEvent.$line);
+        if (sameNick(arrRow_a[3], m_strNick))
+        {
+            objWindow.blnJoined = false;
+            objWindow.blnWanted = false;
+            objWindow.objNames = {};
+            renderNames();
+        }
+        else
+        {
+            setName(objWindow, arrRow_a[3], '', '');
+        }
+    }
+    else if (strType === 'QUIT' || strType === 'NICK')
+    {
+        if (blnMe && strType === 'QUIT')
+        {
+            m_blnRegistered = false;
+            m_strWantNick = '';
+            markAllLeft(true);
+            updateHeader();
+            addLine(m_strStatusKey, objEvent.$line);
+        }
+        else
+        {
+            if (blnMe)
+            {
+                m_strNick = arrRow_a[2];
+                m_strWantNick = m_strNick;
+                updateHeader();
+                addLine(m_strStatusKey, formatEvent(arrRow_a, 0).$line);
+            }
+            // show in every window this person is in
+            for (strKey in m_objWindows)
+            {
+                if (m_objWindows.hasOwnProperty(strKey))
+                {
+                    objWindow = m_objWindows[strKey];
+                    if (objWindow.objNames[strNick.toLowerCase()] || sameNick(objWindow.strName, strNick))
+                    {
+                        addLine(strKey, formatEvent(arrRow_a, 0).$line);
+                        if (strType === 'QUIT')
+                        {
+                            setName(objWindow, strNick, '', '');
+                        }
+                        else
+                        {
+                            setName(objWindow, strNick, arrRow_a[2], null);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    else if (strType === 'NOTICE' && !isChannel(arrRow_a[2]))
+    {
+        addLine(m_strCurrent, objEvent.$line);
+    }
+    else if (strType === 'TOPIC')
+    {
+        objWindow = ensureWindow(arrRow_a[2]);
+        objWindow.strTopic = arrRow_a[3];
+        updateTopicBar();
+        addLine(arrRow_a[2], objEvent.$line);
+    }
+    else if (strType === 'MODE')
+    {
+        addLine(objEvent.strWindow, objEvent.$line);
+        if (isChannel(arrRow_a[2]))
+        {
+            refreshNames(arrRow_a[2]);
+        }
+    }
+    else if (strType === 'INVITE')
+    {
+        addLine(m_strStatusKey, objEvent.$line);
+        if (m_strCurrent !== m_strStatusKey)
+        {
+            addLine(m_strCurrent, formatEvent(arrRow_a, 0).$line);
+        }
+    }
+    else
+    {
+        // PRIVMSG, channel NOTICE, anything new
+        addLine(objEvent.strWindow, objEvent.$line);
+    }
+}
+
+// turn an event row into a line; used for live events and history
+function formatEvent(arrRow_a, intTime_a)
+{
+    var strType = arrRow_a[0];
+    var strNick = prefixNick(arrRow_a[1] || '');
+    var strWindow = m_strStatusKey;
+    var strShow = '*';
+    var strText = '';
+    var strClass = 'gsEvent';
+    var arrAction = null;
+    if (strType === 'JOIN')
+    {
+        strWindow = arrRow_a[2];
+        strShow = '→';
+        strText = strNick + ' joined';
+    }
+    else if (strType === 'PART')
+    {
+        strWindow = arrRow_a[2];
+        strShow = '←';
+        strText = strNick + ' left';
+        if (arrRow_a[3])
+        {
+            strText += ' (' + arrRow_a[3] + ')';
+        }
+    }
+    else if (strType === 'QUIT')
+    {
+        strShow = '←';
+        strText = strNick + ' quit (' + arrRow_a[2] + ')';
+    }
+    else if (strType === 'NICK')
+    {
+        strText = strNick + ' is now ' + arrRow_a[2];
+    }
+    else if (strType === 'PRIVMSG' || strType === 'NOTICE')
+    {
+        strWindow = isChannel(arrRow_a[2]) ? arrRow_a[2] : strNick;
+        arrAction = /^\x01ACTION ([\s\S]*)\x01$/.exec(arrRow_a[3]);
+        if (arrAction)
+        {
+            strText = strNick + ' ' + arrAction[1];
+            strClass = 'gsAction';
+        }
+        else if (arrRow_a[3].charAt(0) === '\x01')
+        {
+            strText = strNick + ' sent ' + arrRow_a[3].replace(/\x01/g, '');
+        }
+        else if (strType === 'NOTICE')
+        {
+            strShow = '-' + strNick + '-';
+            strText = arrRow_a[3];
+            strClass = 'gsNotice';
+        }
+        else
+        {
+            strShow = strNick;
+            strText = arrRow_a[3];
+            strClass = '';
+        }
+    }
+    else if (strType === 'TOPIC')
+    {
+        strWindow = arrRow_a[2];
+        strText = (arrRow_a[3] === '') ? strNick + ' cleared the topic' : strNick + ' set the topic: ' + arrRow_a[3];
+    }
+    else if (strType === 'KICK')
+    {
+        strWindow = arrRow_a[2];
+        strShow = '←';
+        strText = strNick + ' kicked ' + arrRow_a[3] + ' (' + arrRow_a[4] + ')';
+    }
+    else if (strType === 'MODE')
+    {
+        strWindow = isChannel(arrRow_a[2]) ? arrRow_a[2] : m_strStatusKey;
+        strText = strNick + ' set mode ' + arrRow_a.slice(3).join(' ');
+    }
+    else if (strType === 'INVITE')
+    {
+        strText = strNick + ' invited you to ' + arrRow_a[3] + '. Type /join ' + arrRow_a[3] + ' to go in.';
+        strClass = 'gsInfo';
+    }
+    else
+    {
+        strText = arrRow_a.join(' ');
+    }
+    return { strWindow: strWindow, $line: makeLine(intTime_a, strShow, strText, strClass) };
+}
+
+// ===========================================================================
+// History
+// ===========================================================================
+
+function loadHistory(strChannel_a, strTail_a)
+{
+    apiCall('HISTORY', { channel: strChannel_a, tail: strTail_a, count: String(m_intHistoryCount) });
+}
+
+function handleHistory(arrRows_a, arrEnd_a)
+{
+    var objWindow = ensureWindow(arrEnd_a[1]);
+    var elLog = objWindow.$log[0];
+    var intOldHeight = elLog.scrollHeight;
+    var intOldTop = elLog.scrollTop;
+    var arrLines = [];
+    var intI;
+    for (intI = 0; intI < arrRows_a.length; intI++)
+    {
+        arrLines.push(formatEvent(arrRows_a[intI].slice(4), parseInt(arrRows_a[intI][3], 10)).$line[0]);
+    }
+    objWindow.$hist.prepend(arrLines);
+    if (arrEnd_a[2] !== '')
+    {
+        objWindow.strOldest = arrEnd_a[2];
+    }
+    objWindow.blnMore = (arrEnd_a[3] === '1');
+    objWindow.$older.toggle(objWindow.blnMore);
+    if (!objWindow.blnHistoryLoaded)
+    {
+        objWindow.blnHistoryLoaded = true;
+        elLog.scrollTop = elLog.scrollHeight;
+    }
+    else
+    {
+        // keep the view where it was after adding older lines on top
+        elLog.scrollTop = intOldTop + (elLog.scrollHeight - intOldHeight);
+    }
+}
+
+// ===========================================================================
+// Windows
+// ===========================================================================
+
+function ensureWindow(strName_a)
+{
+    var strKey = strName_a.toLowerCase();
+    var objWindow = m_objWindows[strKey];
+    var strType = 'query';
+    var strLabel = strName_a;
+    if (!objWindow)
+    {
+        if (strKey === m_strStatusKey)
+        {
+            strType = 'status';
+            strLabel = 'Server';
+        }
+        else if (isChannel(strName_a))
+        {
+            strType = 'channel';
+        }
+        objWindow = {
+            strKey: strKey,
+            strName: strName_a,
+            strType: strType,
+            strTopic: '',
+            objNames: {},
+            arrPendingNames: null,
+            strOldest: '',
+            blnMore: false,
+            blnHistoryLoaded: false,
+            blnJoined: false,
+            blnWanted: false
+        };
+        objWindow.$log = $('<div class="gsLog"></div>').appendTo('#geLogs');
+        objWindow.$older = $('<button type="button" class="gsOlder gbOlder">Load older messages</button>').appendTo(objWindow.$log);
+        objWindow.$older.data('window', strKey);
+        objWindow.$hist = $('<div></div>').appendTo(objWindow.$log);
+        objWindow.$live = $('<div></div>').appendTo(objWindow.$log);
+        objWindow.$tab = $('<div class="gsTab gbTab" tabindex="0" role="button"></div>').data('window', strKey);
+        $('<span class="gsTabName"></span>').text(strLabel).appendTo(objWindow.$tab);
+        if (strType !== 'status')
+        {
+            $('<button type="button" class="gsTabClose gbClose" aria-label="Close window">×</button>').data('window', strKey).appendTo(objWindow.$tab);
+        }
+        objWindow.$tab.appendTo('#geWindows');
+        m_objWindows[strKey] = objWindow;
+    }
+    return objWindow;
+}
+
+function currentWindow()
+{
+    return m_objWindows[m_strCurrent];
+}
+
+function showWindow(strKey_a)
+{
+    var objWindow = m_objWindows[strKey_a];
+    if (objWindow)
+    {
+        m_strCurrent = strKey_a;
+        $('.gsLog').removeClass('gsLogCurrent');
+        $('.gsTab').removeClass('gsTabCurrent');
+        objWindow.$log.addClass('gsLogCurrent');
+        objWindow.$tab.addClass('gsTabCurrent').removeClass('gsTabUnread');
+        objWindow.$log[0].scrollTop = objWindow.$log[0].scrollHeight;
+        updateTopicBar();
+        renderNames();
+    }
+}
+
+function closeWindow(strKey_a)
+{
+    var objWindow = m_objWindows[strKey_a];
+    if (objWindow && objWindow.strType !== 'status')
+    {
+        if (objWindow.strType === 'channel' && objWindow.blnJoined)
+        {
+            apiCall('PART', { channel: objWindow.strName });
+        }
+        objWindow.$log.remove();
+        objWindow.$tab.remove();
+        delete m_objWindows[strKey_a];
+        if (m_strCurrent === strKey_a)
+        {
+            showWindow(m_strStatusKey);
+        }
+    }
+}
+
+function addLine(strWindow_a, $line_a)
+{
+    var objWindow = ensureWindow(strWindow_a);
+    var elLog = objWindow.$log[0];
+    var blnBottom = (elLog.scrollHeight - elLog.scrollTop - elLog.clientHeight) < 40;
+    objWindow.$live.append($line_a);
+    if (blnBottom)
+    {
+        elLog.scrollTop = elLog.scrollHeight;
+    }
+    if (objWindow.strKey !== m_strCurrent)
+    {
+        objWindow.$tab.addClass('gsTabUnread');
+    }
+}
+
+function makeLine(intTime_a, strNick_a, strText_a, strClass_a)
+{
+    var objDate = intTime_a ? new Date(intTime_a * 1000) : new Date();
+    var $line = $('<div class="gsLine"></div>').addClass(strClass_a || '');
+    var $nick = $('<span class="gsNick"></span>').text(strNick_a);
+    $('<span class="gsTime"></span>').text(pad2(objDate.getHours()) + ':' + pad2(objDate.getMinutes())).appendTo($line);
+    if (/^[A-Za-z_\[\]`^{|}]/.test(strNick_a))
+    {
+        $nick.css('color', nickColour(strNick_a));
+    }
+    $nick.appendTo($line);
+    $('<span class="gsText"></span>').text(strText_a).appendTo($line);
+    return $line;
+}
+
+function updateTopicBar()
+{
+    var objWindow = currentWindow();
+    var strText = 'Server messages. Type /help for commands.';
+    if (objWindow.strType === 'channel')
+    {
+        strText = (objWindow.strTopic !== '') ? objWindow.strTopic : 'No topic set';
+    }
+    else if (objWindow.strType === 'query')
+    {
+        strText = 'Private chat with ' + objWindow.strName;
+    }
+    $('#geTopic').text(strText);
+}
+
+function updateHeader()
+{
+    var strStatus = 'Connecting…';
+    if (m_blnLoggedIn && m_blnRegistered)
+    {
+        strStatus = 'Signed in as ' + m_strNick;
+        $('#geNick').val(m_strNick);
+        $('#geConnect').text('Change nickname');
+    }
+    else if (m_blnLoggedIn)
+    {
+        strStatus = 'Choose a nickname to start';
+        $('#geConnect').text('Connect');
+    }
+    $('#geStatus').text(strStatus);
+}
+
+// ===========================================================================
+// Names list
+// ===========================================================================
+
+function refreshNames(strChannel_a)
+{
+    var strKey = strChannel_a.toLowerCase();
+    clearTimeout(m_objNamesTimers[strKey]);
+    m_objNamesTimers[strKey] = setTimeout(function ()
+    {
+        apiCall('NAMES', { channel: strChannel_a });
+    }, 300);
+}
+
+function parseNames(arrTokens_a)
+{
+    var objNames = {};
+    var intI;
+    for (intI = 0; intI < arrTokens_a.length; intI++)
+    {
+        var strToken = arrTokens_a[intI];
+        var strMode = '';
+        if (strToken.charAt(0) === '@' || strToken.charAt(0) === '+')
+        {
+            strMode = strToken.charAt(0);
+            strToken = strToken.substring(1);
+        }
+        if (strToken !== '')
+        {
+            objNames[strToken.toLowerCase()] = { strNick: strToken, strMode: strMode };
+        }
+    }
+    return objNames;
+}
+
+// strNewNick_a '' = remove; strMode_a null = keep current mode
+function setName(objWindow_a, strNick_a, strNewNick_a, strMode_a)
+{
+    var strKey = strNick_a.toLowerCase();
+    var strMode = strMode_a;
+    if (objWindow_a.strType === 'channel')
+    {
+        if (strMode === null)
+        {
+            strMode = objWindow_a.objNames[strKey] ? objWindow_a.objNames[strKey].strMode : '';
+        }
+        delete objWindow_a.objNames[strKey];
+        if (strNewNick_a !== '')
+        {
+            objWindow_a.objNames[strNewNick_a.toLowerCase()] = { strNick: strNewNick_a, strMode: strMode };
+        }
+        if (objWindow_a.strKey === m_strCurrent)
+        {
+            renderNames();
+        }
+    }
+}
+
+function renderNames()
+{
+    var objWindow = currentWindow();
+    var $names = $('#geNames').empty();
+    var arrList = [];
+    var strKey;
+    var intI;
+    if (objWindow && objWindow.strType === 'channel')
+    {
+        for (strKey in objWindow.objNames)
+        {
+            if (objWindow.objNames.hasOwnProperty(strKey))
+            {
+                arrList.push(objWindow.objNames[strKey]);
+            }
+        }
+        arrList.sort(function (objA_a, objB_a)
+        {
+            var intResult = modeRank(objA_a.strMode) - modeRank(objB_a.strMode);
+            if (intResult === 0)
+            {
+                intResult = (objA_a.strNick.toLowerCase() < objB_a.strNick.toLowerCase()) ? -1 : 1;
+            }
+            return intResult;
+        });
+        $('<div class="gsNamesCount"></div>').text(arrList.length + (arrList.length === 1 ? ' person' : ' people')).appendTo($names);
+        for (intI = 0; intI < arrList.length; intI++)
+        {
+            $('<div class="gsName"></div>')
+                .text(arrList[intI].strMode + arrList[intI].strNick)
+                .css('color', nickColour(arrList[intI].strNick))
+                .appendTo($names);
+        }
+    }
+}
+
+function modeRank(strMode_a)
+{
+    var intRank = 2;
+    if (strMode_a === '@')
+    {
+        intRank = 0;
+    }
+    else if (strMode_a === '+')
+    {
+        intRank = 1;
+    }
+    return intRank;
+}
+
+// ===========================================================================
+// Input and commands
+// ===========================================================================
+
+function sendInput()
+{
+    var strText = $('#geInput').val();
+    if (strText.trim() !== '')
+    {
+        $('#geInput').val('');
+        if (strText.charAt(0) === '/' && strText.charAt(1) !== '/')
+        {
+            runCommand(strText.substring(1));
+        }
+        else
+        {
+            if (strText.substring(0, 2) === '//')
+            {
+                strText = strText.substring(1);
+            }
+            sayTo(currentWindow(), strText, false);
+        }
+    }
+}
+
+function sayTo(objWindow_a, strText_a, blnAction_a)
+{
+    if (!m_blnRegistered)
+    {
+        addLine(m_strCurrent, makeLine(0, '!', 'Choose a nickname and select Connect first.', 'gsError'));
+    }
+    else if (objWindow_a.strType === 'status')
+    {
+        addLine(m_strCurrent, makeLine(0, '!', 'Join a channel or open a private chat to send messages. Type /help for commands.', 'gsError'));
+    }
+    else if (blnAction_a)
+    {
+        apiCall('PRIVMSG', { target: objWindow_a.strName, text: '\x01ACTION ' + strText_a + '\x01' });
+        addLine(objWindow_a.strKey, makeLine(0, '*', m_strNick + ' ' + strText_a, 'gsAction'));
+    }
+    else
+    {
+        apiCall('PRIVMSG', { target: objWindow_a.strName, text: strText_a });
+        addLine(objWindow_a.strKey, makeLine(0, m_strNick, strText_a, ''));
+    }
+}
+
+function runCommand(strLine_a)
+{
+    var arrWords = strLine_a.split(' ');
+    var strCmd = arrWords[0].toLowerCase();
+    var objCurrent = currentWindow();
+    var strChannel = (objCurrent.strType === 'channel') ? objCurrent.strName : '';
+    var intFrom = 1;
+    var objParams = {};
+    var objWindow = null;
+    var strText = '';
+    var arrPairs = [];
+    var intI;
+
+    // "/cmd #chan ..." uses #chan, "/cmd ..." uses the current channel
+    if (arrWords.length > 1 && isChannel(arrWords[1]))
+    {
+        strChannel = arrWords[1];
+        intFrom = 2;
+    }
+
+    if (strCmd === 'join' || strCmd === 'j')
+    {
+        strText = arrWords[1] || '';
+        if (strText !== '' && !isChannel(strText))
+        {
+            strText = '#' + strText;
+        }
+        apiCall('JOIN', { channel: strText, key: arrWords[2] || '' });
+    }
+    else if (strCmd === 'part' || strCmd === 'leave')
+    {
+        objWindow = m_objWindows[strChannel.toLowerCase()];
+        if (objWindow)
+        {
+            objWindow.blnWanted = false;
+        }
+        apiCall('PART', { channel: strChannel, message: restFrom(arrWords, intFrom) });
+    }
+    else if (strCmd === 'msg' || strCmd === 'm' || strCmd === 'query')
+    {
+        if (arrWords.length > 1 && arrWords[1] !== '')
+        {
+            objWindow = ensureWindow(arrWords[1]);
+            showWindow(objWindow.strKey);
+            strText = restFrom(arrWords, 2);
+            if (strText !== '')
+            {
+                sayTo(objWindow, strText, false);
+            }
+        }
+    }
+    else if (strCmd === 'me')
+    {
+        sayTo(objCurrent, restFrom(arrWords, 1), true);
+    }
+    else if (strCmd === 'notice')
+    {
+        apiCall('NOTICE', { target: arrWords[1] || '', text: restFrom(arrWords, 2) });
+        addLine(m_strCurrent, makeLine(0, '→', '-' + (arrWords[1] || '') + '- ' + restFrom(arrWords, 2), 'gsNotice'));
+    }
+    else if (strCmd === 'nick')
+    {
+        if (!m_blnRegistered)
+        {
+            register(arrWords[1] || '');
+        }
+        else
+        {
+            apiCall('NICK', { nick: arrWords[1] || '' });
+        }
+    }
+    else if (strCmd === 'topic' || strCmd === 't')
+    {
+        objParams = { channel: strChannel };
+        strText = restFrom(arrWords, intFrom);
+        if (strText !== '')
+        {
+            objParams.topic = strText;
+        }
+        apiCall('TOPIC', objParams);
+    }
+    else if (strCmd === 'names')
+    {
+        apiCall('NAMES', { channel: strChannel });
+    }
+    else if (strCmd === 'list')
+    {
+        apiCall('LIST', {});
+    }
+    else if (strCmd === 'whois' || strCmd === 'wi')
+    {
+        apiCall('WHOIS', { nick: arrWords[1] || '' });
+    }
+    else if (strCmd === 'away')
+    {
+        apiCall('AWAY', { message: restFrom(arrWords, 1) });
+    }
+    else if (strCmd === 'kick' || strCmd === 'k')
+    {
+        apiCall('KICK', { channel: strChannel, nick: arrWords[intFrom] || '', reason: restFrom(arrWords, intFrom + 1) });
+    }
+    else if (strCmd === 'invite')
+    {
+        if (arrWords.length > 2 && isChannel(arrWords[2]))
+        {
+            strChannel = arrWords[2];
+        }
+        apiCall('INVITE', { nick: arrWords[1] || '', channel: strChannel });
+    }
+    else if (strCmd === 'mode')
+    {
+        // /mode +o bob (current channel), /mode #chan +o bob, /mode mynick +i
+        if (arrWords.length > 1 && (arrWords[1].charAt(0) === '+' || arrWords[1].charAt(0) === '-'))
+        {
+            apiCall('MODE', { target: strChannel, modes: arrWords[1], args: restFrom(arrWords, 2) });
+        }
+        else
+        {
+            apiCall('MODE', { target: arrWords[1] || strChannel, modes: arrWords[2] || '', args: restFrom(arrWords, 3) });
+        }
+    }
+    else if (strCmd === 'access')
+    {
+        apiCall('ACCESS', { channel: strChannel });
+    }
+    else if (strCmd === 'history')
+    {
+        objWindow = m_objWindows[strChannel.toLowerCase()];
+        apiCall('HISTORY', {
+            channel: strChannel,
+            tail: objWindow ? objWindow.strOldest : '',
+            count: arrWords[intFrom] || String(m_intHistoryCount)
+        });
+    }
+    else if (strCmd === 'quit' || strCmd === 'bye' || strCmd === 'exit')
+    {
+        apiCall('QUIT', { message: restFrom(arrWords, 1) });
+    }
+    else if (strCmd === 'clear')
+    {
+        objCurrent.$hist.empty();
+        objCurrent.$live.empty();
+    }
+    else if (strCmd === 'close')
+    {
+        closeWindow(objCurrent.strKey);
+    }
+    else if (strCmd === 'raw')
+    {
+        // /raw COMMAND name=value|name=value
+        strText = restFrom(arrWords, 2);
+        if (strText !== '')
+        {
+            arrPairs = strText.split('|');
+            for (intI = 0; intI < arrPairs.length; intI++)
+            {
+                if (arrPairs[intI].indexOf('=') > 0)
+                {
+                    objParams[arrPairs[intI].substring(0, arrPairs[intI].indexOf('=')).trim()] = arrPairs[intI].substring(arrPairs[intI].indexOf('=') + 1);
+                }
+            }
+        }
+        apiCall((arrWords[1] || '').toUpperCase(), objParams);
+    }
+    else if (strCmd === 'help')
+    {
+        showHelp();
+    }
+    else
+    {
+        addLine(m_strCurrent, makeLine(0, '!', 'Unknown command /' + strCmd + '. Type /help for the list.', 'gsError'));
+    }
+}
+
+function showHelp()
+{
+    var arrHelp = [
+        '/join #channel [key]            join or create a channel',
+        '/part [#channel] [message]      leave a channel',
+        '/msg nick|#channel text         send a message',
+        '/query nick                     open a private chat',
+        '/me action                      action message',
+        '/notice target text             send a notice',
+        '/nick name                      set or change nickname',
+        '/topic [#channel] [text]        show or set the topic',
+        '/names [#channel]               who is in a channel',
+        '/list                           list channels',
+        '/whois nick                     info about someone',
+        '/away [message]                 set or clear away',
+        '/invite nick [#channel]         invite someone',
+        '/kick [#channel] nick [reason]  remove someone',
+        '/mode [#channel] +modes [args]  show or change modes (+i makes it private, owner only)',
+        '/access [#channel]              invite list of a private channel',
+        '/history [#channel] [count]     load older messages',
+        '/clear  /close                  clear or close this window',
+        '/quit [message]                 sign out',
+        '/raw COMMAND name=value|name=value   send any API command',
+        'Short forms: /j /leave /m /t /k /wi /bye /exit. Start a message with // to send a leading /.'
+    ];
+    var intI;
+    for (intI = 0; intI < arrHelp.length; intI++)
+    {
+        addLine(m_strCurrent, makeLine(0, '?', arrHelp[intI], 'gsInfo'));
+    }
+}
+
+function connectClicked()
+{
+    var strNick = $('#geNick').val().trim();
+    if (strNick === '')
+    {
+        $('#geNick').focus();
+    }
+    else if (!m_blnLoggedIn)
+    {
+        m_strWantNick = strNick;
+    }
+    else if (!m_blnRegistered)
+    {
+        register(strNick);
+    }
+    else if (strNick !== m_strNick)
+    {
+        apiCall('NICK', { nick: strNick });
+    }
+}
+
+// ===========================================================================
+// Helpers
+// ===========================================================================
+
+function restFrom(arrWords_a, intFrom_a)
+{
+    return arrWords_a.slice(intFrom_a).join(' ');
+}
+
+function isChannel(strName_a)
+{
+    return (strName_a.charAt(0) === '#');
+}
+
+function prefixNick(strPrefix_a)
+{
+    return strPrefix_a.split('!')[0];
+}
+
+function sameNick(strA_a, strB_a)
+{
+    return (strA_a.toLowerCase() === strB_a.toLowerCase());
+}
+
+function nickColour(strNick_a)
+{
+    var intHash = 0;
+    var intI;
+    var strLower = strNick_a.toLowerCase();
+    for (intI = 0; intI < strLower.length; intI++)
+    {
+        intHash = (intHash * 31 + strLower.charCodeAt(intI)) % 360;
+    }
+    return 'hsl(' + intHash + ', 55%, 38%)';
+}
+
+function pad2(intValue_a)
+{
+    return (intValue_a < 10 ? '0' : '') + intValue_a;
+}
+
+function unixToText(strUnix_a)
+{
+    return new Date(parseInt(strUnix_a, 10) * 1000).toLocaleString();
+}
+
+function secondsToText(intSeconds_a)
+{
+    var strText = intSeconds_a + 's';
+    if (intSeconds_a >= 3600)
+    {
+        strText = Math.floor(intSeconds_a / 3600) + 'h ' + Math.floor((intSeconds_a % 3600) / 60) + 'm';
+    }
+    else if (intSeconds_a >= 60)
+    {
+        strText = Math.floor(intSeconds_a / 60) + 'm';
+    }
+    return strText;
+}
+
+function getCookie(strName_a)
+{
+    var strValue = '';
+    var arrParts = document.cookie.split(';');
+    var intI;
+    for (intI = 0; intI < arrParts.length; intI++)
+    {
+        var strPart = arrParts[intI].trim();
+        if (strPart.indexOf(strName_a + '=') === 0)
+        {
+            strValue = decodeURIComponent(strPart.substring(strName_a.length + 1));
+        }
+    }
+    return strValue;
+}
+
+function setCookie(strName_a, strValue_a)
+{
+    document.cookie = strName_a + '=' + encodeURIComponent(strValue_a) + '; max-age=' + (60 * 60 * 24 * 3650) + '; path=/; SameSite=Lax';
+}
+
+// ===========================================================================
+// Start
+// ===========================================================================
+
+$(function ()
+{
+    $('#geWindows').on('click', '.gbTab', function ()
+    {
+        showWindow($(this).data('window'));
+    });
+    $('#geWindows').on('keydown', '.gbTab', function (objEvent_a)
+    {
+        if (objEvent_a.which === 13)
+        {
+            showWindow($(this).data('window'));
+        }
+    });
+    $('#geWindows').on('click', '.gbClose', function (objEvent_a)
+    {
+        objEvent_a.stopPropagation();
+        closeWindow($(this).data('window'));
+    });
+    $('#geLogs').on('click', '.gbOlder', function ()
+    {
+        var objWindow = m_objWindows[$(this).data('window')];
+        if (objWindow)
+        {
+            loadHistory(objWindow.strName, objWindow.strOldest);
+        }
+    });
+    $('#geInput').on('keydown', function (objEvent_a)
+    {
+        if (objEvent_a.which === 13)
+        {
+            sendInput();
+        }
+    });
+    $('#geSend').on('click', sendInput);
+    $('#geNick').on('keydown', function (objEvent_a)
+    {
+        if (objEvent_a.which === 13)
+        {
+            connectClicked();
+        }
+    });
+    $('#geConnect').on('click', connectClicked);
+
+    ensureWindow(m_strStatusKey);
+    showWindow(m_strStatusKey);
+    addLine(m_strStatusKey, makeLine(0, '?', 'Choose a nickname and select Connect, then /join #channel. Type /help for all commands.', 'gsInfo'));
+    m_strGuid = getCookie(m_strCookieName);
+    startLogin('');
+});
+</script>
+</body>
+</html>
